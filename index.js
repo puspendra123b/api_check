@@ -100,6 +100,47 @@ app.get('/api/episodes', async (req, res) => {
   }
 });
 
+app.get('/api/anime/search', async (req, res) => {
+  try {
+    const { title } = req.query;
+    
+    if (!title) {
+      return res.status(400).json({ error: 'Title parameter is required' });
+    }
+    
+    // Encode the title for the URL
+    const encodedTitle = encodeURIComponent(title);
+    
+    // Make request to the external API
+    const response = await axios.get(`https://animeapi.skin/search?q=${encodedTitle}`);
+    
+    // Return the data from the external API
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error fetching anime episodes:', error.message);
+    
+    // Handle different error scenarios
+    if (error.response) {
+      // The external API responded with an error
+      return res.status(error.response.status).json({
+        error: 'Error from anime API',
+        details: error.response.data
+      });
+    } else if (error.request) {
+      // No response received from the external API
+      return res.status(503).json({
+        error: 'Unable to reach anime API service'
+      });
+    } else {
+      // Something else went wrong
+      return res.status(500).json({
+        error: 'Internal server error',
+        message: error.message
+      });
+    }
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Proxy server running on port ${PORT}`);
 });
