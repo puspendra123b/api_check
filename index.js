@@ -141,6 +141,36 @@ app.get('/api/anime/search', async (req, res) => {
   }
 });
 
+const TARGET_API = 'https://animeapi.skin/trending'; 
+
+
+async function callWithRetry(retries = 3, delay = 500) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await axios.get(TARGET_API);
+      return response.data;
+    } catch (err) {
+      const status = err.response?.status;
+      if (i === retries - 1 || (status && status < 500)) {
+        throw err;
+      }
+      // console.log(`Retry ${i + 1}/${retries} after ${delay}ms`);
+      await new Promise((res) => setTimeout(res, delay));
+    }
+  }
+}
+
+// Proxy endpoint
+app.get('/api/anime/trending', async (req, res) => {
+  try {
+    const data = await callWithRetry(5, 500);
+    res.json(data);
+  } catch (err) {
+    console.error('Failed to fetch from target API:', err.message);
+    res.status(500).json({ error: 'Failed to load the page please refresh' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Proxy server running on port ${PORT}`);
 });
