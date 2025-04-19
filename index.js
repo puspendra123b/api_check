@@ -163,7 +163,7 @@ async function callWithRetry(retries = 3, delay = 500) {
 // Proxy endpoint
 app.get('/api/anime/trending', async (req, res) => {
   try {
-    const data = await callWithRetry(5, 500);
+    const data = await callWithRetry(20, 500);
     res.json(data);
   } catch (err) {
     console.error('Failed to fetch from target API:', err.message);
